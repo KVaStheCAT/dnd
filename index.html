@@ -1,0 +1,1122 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Скрипторий</title>
+<meta name="theme-color" content="#24150b">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Ruslan+Display&display=swap">
+<style>
+:root {
+  /* Layout: one-screen app. Wooden board with iron bands; a nailed parchment sheet scrolls in the middle; a five-tab plank sits at the bottom. */
+  --wood: #3b2416;
+  --wood-deep: #22140a;
+  --iron-hi: #a3a7ae;
+  --iron-mid: #5b5e64;
+  --iron-lo: #2b2d31;
+  --gold: #c9a24a;
+  --gold-hi: #f0d98f;
+  --parch: #e3cf9c;
+  --parch-edge: #c4a566;
+  --ink: #2a1c0f;
+  --ink-soft: #5c4228;
+  --seal: #8a2a1f;
+  --cream-dim: #c4af82;
+  --display: "Ruslan Display", "Times New Roman", serif;
+  --body: "EB Garamond", Georgia, "Times New Roman", serif;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+
+body {
+  background:
+    repeating-linear-gradient(90deg, transparent 0 118px, rgba(0,0,0,.5) 118px 120px, rgba(255,200,120,.05) 120px 121px),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.008 .45' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .08 0 0 0 0 .04 0 0 0 0 .01 1.7 0 0 0 -.62'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)'/%3E%3C/svg%3E"),
+    linear-gradient(180deg, var(--wood), var(--wood-deep));
+  color: var(--cream-dim);
+  font: 400 17px/1.5 var(--body);
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app { height: 100%; display: flex; flex-direction: column; }
+
+/* Screen switch works without scripts: hidden radios + labels */
+.radio { position: absolute; width: 1px; height: 1px; margin: 0; opacity: 0; pointer-events: none; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Iron band with rivets */
+.iron {
+  position: relative;
+  height: 10px;
+  background: linear-gradient(var(--iron-hi), var(--iron-mid) 40%, var(--iron-lo));
+  border-top: 1px solid #c0c3c8;
+  border-bottom: 1px solid #0c0c0d;
+  box-shadow: 0 2px 5px rgba(0,0,0,.55);
+}
+.iron::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, #d3d5d9 0 1px, #707378 1.6px, rgba(0,0,0,.55) 2.8px, transparent 3.4px) 0 0 / 30px 100% repeat-x;
+}
+
+/* Header */
+.bar { flex: none; }
+.bar-in {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-block: 14px 12px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.emblem { width: 34px; height: 40px; flex: none; filter: drop-shadow(0 2px 2px rgba(0,0,0,.6)); }
+.brand-wrap { min-width: 0; }
+.brand {
+  display: block;
+  font-family: var(--display);
+  font-size: 1.7rem;
+  line-height: 1.05;
+  color: var(--gold-hi);
+  background: linear-gradient(180deg, #f7e6a8, #c9a24a 55%, #8e6a22);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 1px 0 rgba(0,0,0,.7));
+}
+.sub {
+  margin-top: 4px;
+  font-size: .8rem;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--cream-dim);
+}
+
+/* Scrolling area */
+.main {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-block: 16px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+.sheet {
+  position: relative;
+  min-height: 100%;
+  padding: 12px;
+  border-radius: 3px;
+  color: var(--ink);
+  background:
+    radial-gradient(ellipse at 50% 0, rgba(255,244,205,.45), transparent 65%),
+    /* Mirrored tiling: each image is a 2x2 block, so every second column is flipped left-right and every second row is flipped top-bottom */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='520'%3E%3Cfilter id='s' x='0' y='0' width='1' height='1'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.013' numOctaves='3' seed='11'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .27 0 0 0 0 .08 1.3 0 0 0 -.5'/%3E%3C/filter%3E%3Cdefs%3E%3Crect id='r' width='260' height='260' filter='url(%23s)'/%3E%3C/defs%3E%3Cuse href='%23r'/%3E%3Cuse href='%23r' transform='translate(520 0) scale(-1 1)'/%3E%3Cuse href='%23r' transform='translate(0 520) scale(1 -1)'/%3E%3Cuse href='%23r' transform='translate(520 520) scale(-1 -1)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='f' x='0' y='0' width='1' height='1'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .3 0 0 0 0 .18 0 0 0 0 .05 .9 0 0 0 -.3'/%3E%3C/filter%3E%3Cdefs%3E%3Crect id='r' width='200' height='200' filter='url(%23f)'/%3E%3C/defs%3E%3Cuse href='%23r'/%3E%3Cuse href='%23r' transform='translate(400 0) scale(-1 1)'/%3E%3Cuse href='%23r' transform='translate(0 400) scale(1 -1)'/%3E%3Cuse href='%23r' transform='translate(400 400) scale(-1 -1)'/%3E%3C/svg%3E"),
+    linear-gradient(180deg, #e8d6a6, #dcc48f);
+  box-shadow:
+    inset 0 0 38px rgba(120,76,24,.6),
+    inset 0 0 4px rgba(60,35,10,.85),
+    0 8px 20px rgba(0,0,0,.65),
+    0 0 0 1px rgba(0,0,0,.5);
+}
+.sheet::before,
+.sheet::after {
+  content: "";
+  position: absolute;
+  top: 7px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #d9dce0, #6a6d73 55%, #2b2d31);
+  box-shadow: 0 1px 2px rgba(0,0,0,.6);
+}
+.sheet::before { left: 7px; }
+.sheet::after { right: 7px; }
+
+.frame {
+  border: 3px double rgba(92,66,40,.55);
+  padding: 22px 18px 24px;
+  min-width: 0;
+}
+@media (max-width: 380px) { .frame { padding: 18px 12px 20px; } }
+
+/* Typography */
+.eyebrow {
+  margin: 0;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--seal);
+}
+h1 {
+  margin: 4px 0 0;
+  font: 400 clamp(1.9rem, 8vw, 2.4rem)/1.1 var(--display);
+  color: var(--ink);
+  text-wrap: balance;
+  text-shadow: 0 1px 0 rgba(255,244,210,.55);
+}
+h2 {
+  margin: 22px 0 10px;
+  font: 400 1.4rem/1.2 var(--display);
+  color: var(--ink);
+  text-shadow: 0 1px 0 rgba(255,244,210,.55);
+}
+.rule + h2 { margin-top: 0; }
+.panel p { margin: 0 0 14px; max-width: 34em; }
+.hint { font-style: italic; font-size: .98rem; color: var(--ink-soft); }
+
+.rule { position: relative; height: 9px; margin: 14px 0 16px; }
+.rule::before {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 4px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--ink-soft) 15%, var(--ink-soft) 85%, transparent);
+}
+.rule::after {
+  content: "";
+  position: absolute;
+  left: 50%; top: 1px;
+  width: 7px; height: 7px;
+  background: var(--seal);
+  transform: translateX(-50%) rotate(45deg);
+  box-shadow: 0 0 0 3px #e0c993;
+}
+
+/* Buttons on parchment */
+.step, .mini {
+  border: 1px solid #5a4126;
+  border-radius: 3px;
+  background: linear-gradient(#dcc48f, #c4a566);
+  color: var(--ink);
+  font: 600 1.4rem/1 var(--body);
+  box-shadow: inset 0 1px 0 rgba(255,244,210,.6), 0 1px 2px rgba(60,35,10,.4);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.step:active, .mini:active { background: linear-gradient(#c4a566, #b3934f); transform: translateY(1px); }
+.step:focus-visible, .mini:focus-visible { outline: 2px solid var(--seal); outline-offset: 2px; }
+
+/* Character */
+.name {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0 0 2px;
+  border: 0;
+  border-bottom: 1px dashed var(--ink-soft);
+  border-radius: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-shadow: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.name::placeholder { color: rgba(92,66,40,.55); }
+.name:focus-visible { outline: none; border-bottom: 2px solid var(--seal); }
+
+.grid { display: grid; gap: 10px; margin-bottom: 10px; }
+.grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.num {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 8px 8px 10px;
+  border: 1px solid rgba(92,66,40,.55);
+  border-radius: 3px;
+  background: rgba(255,248,225,.28);
+  box-shadow: inset 0 1px 3px rgba(60,35,10,.25);
+}
+.num-label {
+  font-size: .88rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+  text-align: center;
+  color: var(--ink-soft);
+}
+.num input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  text-align: center;
+  font: 400 1.9rem/1.15 var(--display);
+  color: var(--ink);
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.num input::-webkit-inner-spin-button,
+.num input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.num input:focus-visible { outline: 2px solid var(--seal); outline-offset: 2px; border-radius: 2px; }
+.steps { display: flex; gap: 6px; }
+.step { flex: 1; min-height: 44px; }
+
+.skills { list-style: none; margin: 0; padding: 0; border-top: 1px dashed rgba(92,66,40,.45); }
+.skills li { padding: 10px 2px; border-bottom: 1px dashed rgba(92,66,40,.45); font-size: 1.08rem; }
+
+/* Inventory */
+.items { list-style: none; margin: 0 0 14px; padding: 0; border-top: 1px dashed rgba(92,66,40,.45); }
+.item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px dashed rgba(92,66,40,.45);
+}
+.item-name {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 8px 2px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font: 400 1.08rem/1.3 var(--body);
+  color: var(--ink);
+  -webkit-appearance: none;
+  appearance: none;
+}
+.item-name::placeholder { color: rgba(92,66,40,.7); font-style: italic; }
+.item-name:focus-visible { outline: none; box-shadow: 0 2px 0 var(--seal); }
+.qty-ctl { display: flex; align-items: center; gap: 2px; }
+.mini { width: 38px; height: 44px; padding: 0; font-size: 1.3rem; }
+.qty {
+  min-width: 2.2ch;
+  text-align: center;
+  font: 600 1.15rem/1 var(--body);
+  font-variant-numeric: tabular-nums;
+}
+.item.zero .item-name, .item.zero .qty { opacity: .55; }
+.del.armed { background: var(--seal); border-color: #4a120c; color: #f6e3d0; }
+.empty { font-style: italic; color: var(--ink-soft); }
+.add-btn {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid #111;
+  border-radius: 3px;
+  background: linear-gradient(var(--iron-mid), var(--iron-lo));
+  color: var(--gold-hi);
+  font: 600 1rem/1 var(--body);
+  letter-spacing: .06em;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 2px 4px rgba(0,0,0,.4);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.add-btn:active { transform: translateY(1px); filter: brightness(.9); }
+.add-btn:focus-visible { outline: 2px solid var(--seal); outline-offset: 2px; }
+
+/* Dice */
+.dice-row {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) 48px;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+.arrow {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 64px;
+  padding: 0;
+  border: 1px solid #111;
+  border-radius: 3px;
+  background: linear-gradient(var(--iron-mid), var(--iron-lo));
+  color: var(--gold-hi);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 2px 4px rgba(0,0,0,.4);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.arrow svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.arrow:active { filter: brightness(.9); }
+.arrow:disabled { opacity: .45; cursor: default; }
+.arrow:focus-visible { outline: 2px solid var(--seal); outline-offset: 2px; }
+.die {
+  display: block;
+  width: 100%;
+  max-width: 200px;
+  margin: 0 auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.die:focus-visible { outline: 2px solid var(--seal); outline-offset: 4px; border-radius: 8px; }
+.die-svg { display: block; width: 100%; height: auto; transform-origin: 50% 50%; filter: drop-shadow(0 6px 6px rgba(40,20,5,.45)); }
+.die:active .die-svg { transform: scale(.97); }
+.die-svg text {
+  font-family: var(--display);
+  fill: var(--gold-hi);
+  paint-order: stroke;
+  stroke: #1b1c1f;
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+.die.rolling .die-svg { animation: tumble 1s cubic-bezier(.3,.1,.3,1) both; }
+@keyframes tumble {
+  0%   { transform: rotate(0deg) scale(1); }
+  20%  { transform: rotate(200deg) scale(1.12); }
+  60%  { transform: rotate(520deg) scale(.95); }
+  100% { transform: rotate(720deg) scale(1); }
+}
+.die-label { margin-top: 12px; text-align: center; }
+.die-name { display: block; font: 400 1.7rem/1.1 var(--display); color: var(--ink); }
+.die-range {
+  display: block;
+  margin-top: 2px;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.dice-hint { margin: 16px 0 0; text-align: center; }
+
+/* Notes */
+.notes {
+  display: block;
+  width: 100%;
+  min-height: 20rem;
+  margin: 0;
+  padding: 0 2px;
+  border: 0;
+  border-radius: 0;
+  resize: none;
+  background-color: transparent;
+  background-image: repeating-linear-gradient(transparent 0 27px, rgba(92,66,40,.35) 27px 28px);
+  background-attachment: local;
+  font: 400 1.1rem/28px var(--body);
+  color: var(--ink);
+  -webkit-appearance: none;
+  appearance: none;
+}
+.notes::placeholder { color: rgba(92,66,40,.6); font-style: italic; }
+.notes:focus-visible { outline: none; }
+
+/* Tab plank */
+.tabs { flex: none; }
+.tabs-in {
+  display: flex;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.tab {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 9px 2px 11px;
+  color: var(--cream-dim);
+  font: 600 .78rem/1.1 var(--body);
+  letter-spacing: .03em;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.tab + .tab { border-left: 1px solid rgba(0,0,0,.45); box-shadow: inset 1px 0 0 rgba(255,200,120,.07); }
+.tab span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tab svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.tab::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 50%;
+  width: 30px; height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--gold);
+  transform: translateX(-50%) scaleX(0);
+  transition: transform .2s ease-out;
+}
+#r-char:checked ~ .app .tab[for="r-char"],
+#r-inv:checked ~ .app .tab[for="r-inv"],
+#r-rules:checked ~ .app .tab[for="r-rules"],
+#r-dice:checked ~ .app .tab[for="r-dice"],
+#r-notes:checked ~ .app .tab[for="r-notes"] { color: var(--gold-hi); }
+#r-char:checked ~ .app .tab[for="r-char"]::before,
+#r-inv:checked ~ .app .tab[for="r-inv"]::before,
+#r-rules:checked ~ .app .tab[for="r-rules"]::before,
+#r-dice:checked ~ .app .tab[for="r-dice"]::before,
+#r-notes:checked ~ .app .tab[for="r-notes"]::before { transform: translateX(-50%) scaleX(1); box-shadow: 0 0 10px rgba(240,217,143,.7); }
+#r-char:focus-visible ~ .app .tab[for="r-char"],
+#r-inv:focus-visible ~ .app .tab[for="r-inv"],
+#r-rules:focus-visible ~ .app .tab[for="r-rules"],
+#r-dice:focus-visible ~ .app .tab[for="r-dice"],
+#r-notes:focus-visible ~ .app .tab[for="r-notes"] { outline: 2px solid var(--gold); outline-offset: -4px; }
+
+/* Screen switch */
+.panel { display: none; }
+#r-char:checked ~ .app #screen-char,
+#r-inv:checked ~ .app #screen-inv,
+#r-rules:checked ~ .app #screen-rules,
+#r-dice:checked ~ .app #screen-dice,
+#r-notes:checked ~ .app #screen-notes { display: block; animation: rise .24s ease-out; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .panel { animation: none !important; }
+  .die.rolling .die-svg { animation: none; }
+  .tab::before { transition: none; }
+}
+</style>
+
+<input class="radio" type="radio" name="screen" id="r-char" checked>
+<input class="radio" type="radio" name="screen" id="r-inv">
+<input class="radio" type="radio" name="screen" id="r-rules">
+<input class="radio" type="radio" name="screen" id="r-dice">
+<input class="radio" type="radio" name="screen" id="r-notes">
+
+<div class="app">
+  <header class="bar">
+    <div class="bar-in">
+      <svg class="emblem" viewBox="0 0 34 40" aria-hidden="true">
+        <defs>
+          <linearGradient id="ig" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#6b6e74"/>
+            <stop offset="1" stop-color="#2b2d31"/>
+          </linearGradient>
+        </defs>
+        <path d="M17 2 L32 7 V20 C32 29 25 35 17 38 C9 35 2 29 2 20 V7 Z" fill="url(#ig)" stroke="#c9a24a" stroke-width="1.6" stroke-linejoin="round"/>
+        <path d="M17 9 V30 M9.5 16 H24.5" fill="none" stroke="#f0d98f" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div class="brand-wrap">
+        <span class="brand">Скрипторий</span>
+        <div class="sub">книга героя</div>
+      </div>
+    </div>
+    <div class="iron" aria-hidden="true"></div>
+  </header>
+
+  <main class="main" id="main">
+    <div class="sheet">
+      <div class="frame">
+
+        <!-- Персонаж -->
+        <section class="panel" id="screen-char" aria-label="Персонаж">
+          <p class="eyebrow">Персонаж</p>
+          <h1><input class="name" id="f-name" type="text" maxlength="40" placeholder="Имя героя" autocomplete="off" autocapitalize="words" aria-label="Имя персонажа" value="Безымянный герой"></h1>
+          <div class="rule" aria-hidden="true"></div>
+
+          <div class="grid two">
+            <div class="num">
+              <label class="num-label" for="f-hp">Хиты</label>
+              <input id="f-hp" data-field="hp" type="number" step="1" min="-999" max="999" value="12" autocomplete="off">
+              <div class="steps">
+                <button class="step" type="button" data-for="hp" data-step="-1" aria-label="Хиты: минус один">−</button>
+                <button class="step" type="button" data-for="hp" data-step="1" aria-label="Хиты: плюс один">+</button>
+              </div>
+            </div>
+            <div class="num">
+              <label class="num-label" for="f-hpMax">Макс. хиты</label>
+              <input id="f-hpMax" data-field="hpMax" type="number" step="1" min="-999" max="999" value="12" autocomplete="off">
+              <div class="steps">
+                <button class="step" type="button" data-for="hpMax" data-step="-1" aria-label="Максимум хитов: минус один">−</button>
+                <button class="step" type="button" data-for="hpMax" data-step="1" aria-label="Максимум хитов: плюс один">+</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid two">
+            <div class="num">
+              <label class="num-label" for="f-speed">Скорость</label>
+              <input id="f-speed" data-field="speed" type="number" step="1" min="-999" max="999" value="30" autocomplete="off">
+              <div class="steps">
+                <button class="step" type="button" data-for="speed" data-step="-1" aria-label="Скорость: минус один">−</button>
+                <button class="step" type="button" data-for="speed" data-step="1" aria-label="Скорость: плюс один">+</button>
+              </div>
+            </div>
+            <div class="num">
+              <label class="num-label" for="f-ac">КД</label>
+              <input id="f-ac" data-field="ac" type="number" step="1" min="-999" max="999" value="12" autocomplete="off">
+              <div class="steps">
+                <button class="step" type="button" data-for="ac" data-step="-1" aria-label="КД: минус один">−</button>
+                <button class="step" type="button" data-for="ac" data-step="1" aria-label="КД: плюс один">+</button>
+              </div>
+            </div>
+          </div>
+
+          <h2>Характеристики</h2>
+          <div class="grid three">
+            <div class="num">
+              <label class="num-label" for="f-rage">Ярость</label>
+              <input id="f-rage" data-field="rage" type="number" step="1" min="-999" max="999" value="2" autocomplete="off">
+              <div class="steps">
+                <button class="step" type="button" data-for="rage" data-step="-1" aria-label="Ярость: минус один">−</button>
+                <button class="step" type="button" data-for="rage" data-step="1" aria-label="Ярость: плюс один">+</button>
+              </div>
+            </div>
+            <div class="num">
+              <label class="num-label" for="f-dex">Ловкость</label>
+              <input id="f-dex" data-field="dex" type="number" step="1" min="-999" max="999" value="1" autocomplete="off">
+              <div class="steps">
+                <button class="step" type="button" data-for="dex" data-step="-1" aria-label="Ловкость: минус один">−</button>
+                <button class="step" type="button" data-for="dex" data-step="1" aria-label="Ловкость: плюс один">+</button>
+              </div>
+            </div>
+            <div class="num">
+              <label class="num-label" for="f-wis">Мудрость</label>
+              <input id="f-wis" data-field="wis" type="number" step="1" min="-999" max="999" value="-1" autocomplete="off">
+              <div class="steps">
+                <button class="step" type="button" data-for="wis" data-step="-1" aria-label="Мудрость: минус один">−</button>
+                <button class="step" type="button" data-for="wis" data-step="1" aria-label="Мудрость: плюс один">+</button>
+              </div>
+            </div>
+          </div>
+
+          <h2>Навыки</h2>
+          <ul class="skills">
+            <li>Акробатика</li>
+          </ul>
+        </section>
+
+        <!-- Инвентарь -->
+        <section class="panel" id="screen-inv" aria-label="Инвентарь">
+          <p class="eyebrow">Сумка и снаряжение</p>
+          <h1>Инвентарь</h1>
+          <div class="rule" aria-hidden="true"></div>
+          <ul class="items" id="items">
+            <li class="item" data-id="i1">
+              <input class="item-name" type="text" value="Факел" placeholder="Название предмета" maxlength="60" autocomplete="off" aria-label="Название предмета">
+              <div class="qty-ctl">
+                <button class="mini" type="button" data-act="dec" aria-label="Меньше">−</button>
+                <span class="qty">3</span>
+                <button class="mini" type="button" data-act="inc" aria-label="Больше">+</button>
+              </div>
+              <button class="mini del" type="button" data-act="del" aria-label="Удалить предмет">×</button>
+            </li>
+          </ul>
+          <p class="empty" id="inv-empty" hidden>Сумка пуста. Добавьте первый предмет.</p>
+          <button class="add-btn" type="button" id="add-item">+ Добавить предмет</button>
+        </section>
+
+        <!-- Правила -->
+        <section class="panel" id="screen-rules" aria-label="Правила">
+          <p class="eyebrow">Свод правил</p>
+          <h1>Правила</h1>
+          <div class="rule" aria-hidden="true"></div>
+          <h2>Подзаголовок раздела</h2>
+          <p>Здесь будет текст правил. Пока это заглушка: заголовок, подзаголовок и несколько абзацев, чтобы было видно, как выглядит страница с обычным текстом.</p>
+          <p>Второй абзац нужен, чтобы проверить межстрочный интервал и ширину строки на узком экране телефона. Когда придёт время, его заменит настоящий текст.</p>
+        </section>
+
+        <!-- Кубы -->
+        <section class="panel" id="screen-dice" aria-label="Кубы">
+          <p class="eyebrow">Бросок</p>
+          <h1>Кубы</h1>
+          <div class="rule" aria-hidden="true"></div>
+          <div class="dice-row">
+            <button class="arrow" type="button" id="die-prev" aria-label="Предыдущий куб">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+            </button>
+            <button class="die" type="button" id="die" aria-label="Бросить куб">
+              <svg class="die-svg" id="die-svg" viewBox="0 0 120 120" aria-hidden="true">
+                <defs>
+                  <linearGradient id="dg" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#7a7d84"/>
+                    <stop offset="1" stop-color="#25272b"/>
+                  </linearGradient>
+                </defs>
+                <g id="die-shape">
+                  <polygon points="60,6 108,32 108,88 60,114 12,88 12,32" fill="url(#dg)" stroke="#c9a24a" stroke-width="3" stroke-linejoin="round"/>
+                </g>
+                <text id="die-text" x="60" y="61" dy=".35em" text-anchor="middle" font-size="44">?</text>
+              </svg>
+            </button>
+            <button class="arrow" type="button" id="die-next" aria-label="Следующий куб">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+          <div class="die-label">
+            <span class="die-name" id="die-name">d20</span>
+            <span class="die-range" id="die-range">от 1 до 20</span>
+          </div>
+          <p class="hint dice-hint">Нажмите на куб, чтобы бросить.</p>
+          <span class="sr" id="die-announce" aria-live="polite"></span>
+        </section>
+
+        <!-- Записка -->
+        <section class="panel" id="screen-notes" aria-label="Записка">
+          <p class="eyebrow">Для себя</p>
+          <h1>Записка</h1>
+          <div class="rule" aria-hidden="true"></div>
+          <textarea class="notes" id="f-notes" maxlength="30000" placeholder="Пишите здесь…" aria-label="Записка"></textarea>
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+  <nav class="tabs" aria-label="Разделы">
+    <div class="iron" aria-hidden="true"></div>
+    <div class="tabs-in">
+      <label class="tab" for="r-char">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c.6-4 3.8-6 7.5-6s6.9 2 7.5 6"/></svg>
+        <span>Персонаж</span>
+      </label>
+      <label class="tab" for="r-inv">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9h10l1.5 11h-13z"/><path d="M9 9V7a3 3 0 0 1 6 0v2"/></svg>
+        <span>Инвентарь</span>
+      </label>
+      <label class="tab" for="r-rules">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5z"/><path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H19v-3"/><path d="M9 7h6"/></svg>
+        <span>Правила</span>
+      </label>
+      <label class="tab" for="r-dice">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12L4 7.5M12 12v9"/></svg>
+        <span>Кубы</span>
+      </label>
+      <label class="tab" for="r-notes">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 12h7M9 16h5"/></svg>
+        <span>Записка</span>
+      </label>
+    </div>
+  </nav>
+</div>
+
+<script>
+/* Screen switching works without this script. Everything below adds saving, inventory, dice and notes. */
+(function () {
+  'use strict';
+
+  var COOKIE_PREFIX = 'skr_';
+  var LS_PREFIX = 'skr:';
+  var COOKIE_MAX = 3000;      // longest encoded value kept in a cookie; bigger data stays in localStorage only
+  var YEAR = 31536000;
+  var NAMES = ['char', 'inv', 'rules', 'dice', 'notes'];
+  var DICE = [4, 6, 8, 10, 12, 20, 100];
+
+  function has(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
+  function safe(fn) { try { fn(); } catch (e) {} }
+  function byId(id) { return document.getElementById(id); }
+  function num(v, def, lo, hi) {
+    v = parseInt(v, 10);
+    if (isNaN(v)) return def;
+    return Math.max(lo, Math.min(hi, v));
+  }
+
+  /* ---------- Storage: cookies first, localStorage as a mirror ---------- */
+  function b64e(str) {
+    var bin = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function (m, h) {
+      return String.fromCharCode(parseInt(h, 16));
+    });
+    return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  function b64d(s) {
+    s = s.replace(/-/g, '+').replace(/_/g, '/');
+    while (s.length % 4) s += '=';
+    var bin = atob(s), pct = '';
+    for (var i = 0; i < bin.length; i++) {
+      pct += '%' + ('0' + bin.charCodeAt(i).toString(16)).slice(-2);
+    }
+    return decodeURIComponent(pct);
+  }
+  function getCookie(name) {
+    try {
+      var parts = document.cookie ? document.cookie.split('; ') : [];
+      for (var i = 0; i < parts.length; i++) {
+        var eq = parts[i].indexOf('=');
+        if (parts[i].slice(0, eq) === name) return parts[i].slice(eq + 1);
+      }
+    } catch (e) {}
+    return null;
+  }
+  function setCookie(name, value, maxAge) {
+    try {
+      document.cookie = name + '=' + value + '; max-age=' + maxAge + '; SameSite=Lax' +
+        (location.protocol === 'https:' ? '; Secure' : '');
+    } catch (e) {}
+  }
+  function lsGet(k) { try { return localStorage.getItem(LS_PREFIX + k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(LS_PREFIX + k, v); } catch (e) {} }
+
+  function writeKey(key, obj) {
+    var json = JSON.stringify(obj);
+    lsSet(key, json);
+    var enc = b64e(json);
+    if (enc.length <= COOKIE_MAX) setCookie(COOKIE_PREFIX + key, enc, YEAR);
+    else setCookie(COOKIE_PREFIX + key, '', 0);
+  }
+  function readKey(key) {
+    var c = getCookie(COOKIE_PREFIX + key);
+    if (c) { try { return JSON.parse(b64d(c)); } catch (e) {} }
+    var l = lsGet(key);
+    if (l) { try { return JSON.parse(l); } catch (e) {} }
+    return null;
+  }
+
+  var timers = {};
+  function save(key) {
+    clearTimeout(timers[key]);
+    timers[key] = setTimeout(function () {
+      delete timers[key];
+      writeKey(key, state[key]);
+    }, 250);
+  }
+  function flush() {
+    Object.keys(timers).forEach(function (k) {
+      clearTimeout(timers[k]);
+      delete timers[k];
+      writeKey(k, state[k]);
+    });
+  }
+  window.addEventListener('pagehide', flush);
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') flush();
+  });
+
+  /* ---------- State ---------- */
+  var CHAR_DEF = { hp: 12, hpMax: 12, speed: 30, ac: 12, rage: 2, dex: 1, wis: -1 };
+  var CHAR_KEYS = Object.keys(CHAR_DEF);
+  var uidN = 0;
+  function uid() { uidN += 1; return 'i' + Date.now().toString(36) + uidN; }
+
+  var state = { char: null, inv: null, dice: null, notes: null };
+
+  safe(function () {
+    var c = readKey('char') || {};
+    state.char = { name: typeof c.name === 'string' ? c.name.slice(0, 40) : 'Безымянный герой' };
+    CHAR_KEYS.forEach(function (k) { state.char[k] = num(c[k], CHAR_DEF[k], -999, 999); });
+  });
+  if (!state.char) {
+    state.char = { name: 'Безымянный герой' };
+    CHAR_KEYS.forEach(function (k) { state.char[k] = CHAR_DEF[k]; });
+  }
+
+  state.inv = { items: [
+    { id: 'i1', name: 'Факел', qty: 3 },
+    { id: 'i2', name: 'Верёвка', qty: 1 },
+    { id: 'i3', name: 'Походный паёк', qty: 5 }
+  ] };
+  safe(function () {
+    var v = readKey('inv');
+    if (v && Array.isArray(v.items)) {
+      state.inv.items = v.items.filter(function (it) { return it && typeof it.id === 'string'; })
+        .map(function (it) {
+          return { id: it.id, name: typeof it.name === 'string' ? it.name.slice(0, 60) : '', qty: num(it.qty, 1, 0, 999) };
+        });
+    }
+  });
+
+  state.dice = { die: 20, last: null };
+  safe(function () {
+    var v = readKey('dice');
+    if (v && DICE.indexOf(v.die) > -1) state.dice.die = v.die;
+    if (v && v.last && DICE.indexOf(v.last.die) > -1) {
+      state.dice.last = { die: v.last.die, value: num(v.last.value, 1, 1, v.last.die) };
+    }
+  });
+
+  state.notes = { text: '' };
+  safe(function () {
+    var v = readKey('notes');
+    if (v && typeof v.text === 'string') state.notes.text = v.text.slice(0, 30000);
+  });
+
+  /* ---------- Screens ---------- */
+  var radios = {};
+  NAMES.forEach(function (n) { radios[n] = byId('r-' + n); });
+  var main = byId('main');
+  var notesEl = byId('f-notes');
+  var current = 'char';
+
+  function growNotes() {
+    safe(function () {
+      notesEl.style.height = 'auto';
+      notesEl.style.height = notesEl.scrollHeight + 'px';
+    });
+  }
+  function checkedName() {
+    for (var i = 0; i < NAMES.length; i++) if (radios[NAMES[i]].checked) return NAMES[i];
+    return 'char';
+  }
+  function route() {
+    var h = location.hash.replace('#', '');
+    var saved = lsGet('tab');
+    var name = has(radios, h) ? h : (saved && has(radios, saved) ? saved : 'char');
+    radios[name].checked = true;
+    if (name !== current) { current = name; main.scrollTop = 0; }
+    if (name === 'notes') growNotes();
+  }
+  function onScreenChange() {
+    var name = checkedName();
+    if (name === current) return;
+    current = name;
+    main.scrollTop = 0;
+    lsSet('tab', name);
+    if (name === 'notes') growNotes();
+    try { if (location.hash !== '#' + name) location.hash = name; } catch (e) {}
+  }
+  safe(function () {
+    NAMES.forEach(function (n) { radios[n].addEventListener('change', onScreenChange); });
+    window.addEventListener('hashchange', route);
+    route();
+  });
+
+  /* ---------- Character ---------- */
+  safe(function () {
+    var panel = byId('screen-char');
+    var nameEl = byId('f-name');
+    nameEl.value = state.char.name;
+    CHAR_KEYS.forEach(function (k) { byId('f-' + k).value = state.char[k]; });
+
+    panel.addEventListener('input', function (e) {
+      var t = e.target;
+      if (t === nameEl) {
+        state.char.name = t.value;
+        save('char');
+        return;
+      }
+      var f = t.getAttribute && t.getAttribute('data-field');
+      if (f && has(CHAR_DEF, f) && /^-?\d+$/.test(t.value)) {
+        state.char[f] = num(t.value, state.char[f], -999, 999);
+        save('char');
+      }
+    });
+    panel.addEventListener('change', function (e) {
+      var f = e.target.getAttribute && e.target.getAttribute('data-field');
+      if (f && has(CHAR_DEF, f)) e.target.value = state.char[f];
+    });
+    panel.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('.step') : null;
+      if (!b) return;
+      var f = b.getAttribute('data-for');
+      if (!has(CHAR_DEF, f)) return;
+      state.char[f] = num(state.char[f] + parseInt(b.getAttribute('data-step'), 10), state.char[f], -999, 999);
+      byId('f-' + f).value = state.char[f];
+      save('char');
+    });
+  });
+
+  /* ---------- Inventory ---------- */
+  safe(function () {
+    var list = byId('items');
+    var empty = byId('inv-empty');
+
+    function mk(tag, cls, attrs) {
+      var e = document.createElement(tag);
+      if (cls) e.className = cls;
+      if (attrs) for (var k in attrs) if (has(attrs, k)) e.setAttribute(k, attrs[k]);
+      return e;
+    }
+    function buildItem(it) {
+      var li = mk('li', 'item' + (it.qty === 0 ? ' zero' : ''), { 'data-id': it.id });
+      var name = mk('input', 'item-name', {
+        type: 'text', placeholder: 'Название предмета', maxlength: '60',
+        autocomplete: 'off', 'aria-label': 'Название предмета'
+      });
+      name.value = it.name;
+      var ctl = mk('div', 'qty-ctl');
+      var dec = mk('button', 'mini', { type: 'button', 'data-act': 'dec', 'aria-label': 'Меньше' });
+      dec.textContent = '−';
+      var qty = mk('span', 'qty');
+      qty.textContent = String(it.qty);
+      var inc = mk('button', 'mini', { type: 'button', 'data-act': 'inc', 'aria-label': 'Больше' });
+      inc.textContent = '+';
+      ctl.appendChild(dec); ctl.appendChild(qty); ctl.appendChild(inc);
+      var del = mk('button', 'mini del', { type: 'button', 'data-act': 'del', 'aria-label': 'Удалить предмет' });
+      del.textContent = '×';
+      li.appendChild(name); li.appendChild(ctl); li.appendChild(del);
+      return li;
+    }
+    function render() {
+      while (list.firstChild) list.removeChild(list.firstChild);
+      state.inv.items.forEach(function (it) { list.appendChild(buildItem(it)); });
+      empty.hidden = state.inv.items.length > 0;
+    }
+    function find(id) {
+      for (var i = 0; i < state.inv.items.length; i++) if (state.inv.items[i].id === id) return i;
+      return -1;
+    }
+
+    list.addEventListener('input', function (e) {
+      var li = e.target.closest ? e.target.closest('.item') : null;
+      if (!li || !e.target.classList.contains('item-name')) return;
+      var i = find(li.getAttribute('data-id'));
+      if (i < 0) return;
+      state.inv.items[i].name = e.target.value;
+      save('inv');
+    });
+    list.addEventListener('click', function (e) {
+      var btn = e.target.closest ? e.target.closest('button[data-act]') : null;
+      if (!btn) return;
+      var li = btn.closest('.item');
+      var i = find(li.getAttribute('data-id'));
+      if (i < 0) return;
+      var it = state.inv.items[i];
+      var act = btn.getAttribute('data-act');
+      if (act === 'inc' || act === 'dec') {
+        it.qty = num(it.qty + (act === 'inc' ? 1 : -1), it.qty, 0, 999);
+        li.querySelector('.qty').textContent = String(it.qty);
+        li.classList.toggle('zero', it.qty === 0);
+        save('inv');
+      } else if (act === 'del') {
+        if (btn.getAttribute('data-armed') === '1') {
+          state.inv.items.splice(i, 1);
+          render();
+          save('inv');
+        } else {
+          btn.setAttribute('data-armed', '1');
+          btn.classList.add('armed');
+          btn.setAttribute('aria-label', 'Нажмите ещё раз, чтобы удалить');
+          setTimeout(function () {
+            btn.removeAttribute('data-armed');
+            btn.classList.remove('armed');
+            btn.setAttribute('aria-label', 'Удалить предмет');
+          }, 2500);
+        }
+      }
+    });
+    byId('add-item').addEventListener('click', function () {
+      state.inv.items.push({ id: uid(), name: '', qty: 1 });
+      render();
+      save('inv');
+      var last = list.lastChild;
+      if (last) {
+        var input = last.querySelector('.item-name');
+        input.focus();
+        try { last.scrollIntoView({ block: 'center' }); } catch (e) {}
+      }
+    });
+    render();
+  });
+
+  /* ---------- Dice ---------- */
+  safe(function () {
+    var NS = 'http://www.w3.org/2000/svg';
+    var SHAPES = {
+      4:  { pts: [[60, 8], [112, 98], [8, 98]], c: [60, 68], ty: 74 },
+      6:  { pts: [[22, 22], [98, 22], [98, 98], [22, 98]], c: [60, 60], ty: 61 },
+      8:  { pts: [[60, 6], [106, 60], [60, 114], [14, 60]], c: [60, 60], ty: 61 },
+      10: { pts: [[60, 6], [108, 46], [60, 114], [12, 46]], c: [60, 50], ty: 52 },
+      12: { pts: [[60, 8], [112, 46], [92, 106], [28, 106], [8, 46]], c: [60, 66], ty: 67 },
+      20: { pts: [[60, 6], [108, 32], [108, 88], [60, 114], [12, 88], [12, 32]], c: [60, 60], ty: 61 },
+      100: { circle: true, ty: 61 }
+    };
+    var FACET = 'rgba(240,217,143,0.3)';
+    var shapeG = byId('die-shape');
+    var textEl = byId('die-text');
+    var dieBtn = byId('die');
+    var prev = byId('die-prev');
+    var next = byId('die-next');
+    var nameEl = byId('die-name');
+    var rangeEl = byId('die-range');
+    var announce = byId('die-announce');
+    var idx = DICE.indexOf(state.dice.die);
+    if (idx < 0) idx = DICE.indexOf(20);
+    var rolling = false;
+
+    function svg(tag, attrs) {
+      var e = document.createElementNS(NS, tag);
+      for (var k in attrs) if (has(attrs, k)) e.setAttribute(k, attrs[k]);
+      return e;
+    }
+    function sides() { return DICE[idx]; }
+    function setText(t, sd) {
+      textEl.textContent = t;
+      textEl.setAttribute('font-size', t.length >= 3 ? 30 : (t.length === 2 ? 40 : 44));
+      textEl.setAttribute('y', SHAPES[sd].ty);
+    }
+    function draw() {
+      var sd = sides();
+      var s = SHAPES[sd];
+      while (shapeG.firstChild) shapeG.removeChild(shapeG.firstChild);
+      if (s.circle) {
+        shapeG.appendChild(svg('circle', { cx: 60, cy: 60, r: 50, fill: 'url(#dg)', stroke: '#c9a24a', 'stroke-width': 3 }));
+        shapeG.appendChild(svg('circle', { cx: 60, cy: 60, r: 36, fill: 'none', stroke: FACET, 'stroke-width': 1.2, 'stroke-dasharray': '4 4' }));
+      } else {
+        shapeG.appendChild(svg('polygon', {
+          points: s.pts.map(function (p) { return p.join(','); }).join(' '),
+          fill: 'url(#dg)', stroke: '#c9a24a', 'stroke-width': 3, 'stroke-linejoin': 'round'
+        }));
+        s.pts.forEach(function (p) {
+          shapeG.appendChild(svg('line', { x1: s.c[0], y1: s.c[1], x2: p[0], y2: p[1], stroke: FACET, 'stroke-width': 1.2 }));
+        });
+      }
+      nameEl.textContent = 'd' + sd;
+      rangeEl.textContent = 'от 1 до ' + sd;
+    }
+    function showIdle() {
+      var l = state.dice.last;
+      var sd = sides();
+      if (l && l.die === sd) setText(String(l.value), sd);
+      else setText('?', sd);
+    }
+    function rnd(n) {
+      try {
+        var a = new Uint32Array(1);
+        window.crypto.getRandomValues(a);
+        return (a[0] % n) + 1;
+      } catch (e) {
+        return Math.floor(Math.random() * n) + 1;
+      }
+    }
+    function pick(dir) {
+      if (rolling) return;
+      idx = (idx + dir + DICE.length) % DICE.length;
+      state.dice.die = sides();
+      save('dice');
+      draw();
+      showIdle();
+    }
+    function roll() {
+      if (rolling) return;
+      rolling = true;
+      prev.disabled = true;
+      next.disabled = true;
+      var sd = sides();
+      dieBtn.classList.add('rolling');
+      var tick = setInterval(function () { setText(String(rnd(sd)), sd); }, 70);
+      setTimeout(function () {
+        clearInterval(tick);
+        var v = rnd(sd);
+        setText(String(v), sd);
+        state.dice.last = { die: sd, value: v };
+        save('dice');
+        dieBtn.classList.remove('rolling');
+        prev.disabled = false;
+        next.disabled = false;
+        announce.textContent = 'd' + sd + ': ' + v;
+        rolling = false;
+      }, 1000);
+    }
+    prev.addEventListener('click', function () { pick(-1); });
+    next.addEventListener('click', function () { pick(1); });
+    dieBtn.addEventListener('click', roll);
+    draw();
+    showIdle();
+  });
+
+  /* ---------- Notes ---------- */
+  safe(function () {
+    notesEl.value = state.notes.text;
+    notesEl.addEventListener('input', function () {
+      state.notes.text = notesEl.value;
+      save('notes');
+      growNotes();
+    });
+    growNotes();
+  });
+})();
+</script>
+
+</body></html>
